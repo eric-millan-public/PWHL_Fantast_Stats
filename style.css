@@ -1,0 +1,256 @@
+:root {
+  --bg: #0b1020;
+  --bg-card: #151b2f;
+  --bg-chip: #1f2540;
+  --accent: #f0b429;
+  --accent-soft: rgba(240, 180, 41, 0.15);
+  --text-main: #f5f7ff;
+  --text-muted: #b5bddc;
+  --border-subtle: #262c45;
+  --danger: #e36b6b;
+  --success: #6be3a6;
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at top, #1c2140 0, #050814 55%, #020308 100%);
+  color: var(--text-main);
+  font-family: var(--font-main);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(to right, rgba(5, 10, 30, 0.9), rgba(15, 20, 55, 0.95));
+  backdrop-filter: blur(10px);
+}
+
+.site-header-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+}
+
+.site-header h1 {
+  font-size: 1.9rem;
+  margin: 0 0 0.25rem;
+}
+
+.site-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.page-main {
+  flex: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+
+.section-title {
+  font-size: 1.3rem;
+  margin: 0 0 0.75rem;
+  color: var(--text-main);
+}
+
+.cards-section {
+  margin-bottom: 2rem;
+}
+
+.team-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+/* Team card styling */
+
+.team-card {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  padding: 1rem 1rem 1.1rem;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.team-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.team-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.team-meta {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-chip);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meta-chip--accent {
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.team-card-body {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@media (max-width: 720px) {
+  .team-card-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.stat-chip {
+  background: var(--bg-chip);
+  border-radius: 10px;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stat-value--good {
+  color: var(--success);
+}
+
+.stat-value--bad {
+  color: var(--danger);
+}
+
+.team-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.footer-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.footer-tag {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Roster */
+
+.roster-container {
+  background: var(--bg-card);
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  padding: 0.75rem 0.75rem 0.9rem;
+  overflow-x: auto;
+}
+
+.roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.roster-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.roster-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.roster-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.roster-table th,
+.roster-table td {
+  padding: 0.3rem 0.4rem;
+  white-space: nowrap;
+}
+
+.roster-table thead {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.roster-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.roster-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.roster-role {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.site-footer {
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+  padding: 0.8rem 1.25rem 1.1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
