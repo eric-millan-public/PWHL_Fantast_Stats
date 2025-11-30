@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>PWHL Fantasy – Team Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <h1>PWHL Fantasy Dashboard</h1>
+      <p class="site-subtitle">
+        Live stats pulled from the PWHL API and your team JSON.
+      </p>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <section class="cards-section">
+      <h2 class="section-title">Teams</h2>
+      <div id="team-cards" class="team-cards">
+        <!-- Cards will be injected here by script.js -->
+      </div>
+    </section>
+
+    <section class="roster-section">
+      <h2 class="section-title">Roster (Current Team)</h2>
+      <div id="roster-container" class="roster-container">
+        <!-- Roster table will be injected here -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Data source: PWHL / HockeyTech. This is an unofficial fantasy stats tool.
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
