@@ -3,6 +3,18 @@
 // Manifest listing all fantasy teams and their JSON files
 const TEAM_MANIFEST_URL = "data/teams_index.json";
 
+// Categories used for scoring and display
+const CATEGORIES = [
+  { key: "goals",      field: "goals",           label: "Goals",          higherIsBetter: true },
+  { key: "assists",    field: "assists",         label: "Assists",        higherIsBetter: true },
+  { key: "ppPoints",   field: "powerPlayPoints", label: "PP Points",      higherIsBetter: true },
+  { key: "hits",       field: "hits",            label: "Hits",           higherIsBetter: true },
+  { key: "shots",      field: "shots",           label: "Shots on Goal",  higherIsBetter: true },
+  { key: "pim",        field: "penaltyMinutes",  label: "PIM",            higherIsBetter: true },
+  { key: "savePct",    field: "avgSavePct",      label: "Save % (avg)",   higherIsBetter: true },
+  { key: "gaa",        field: "avgGaa",          label: "GAA (avg)",      higherIsBetter: false }
+];
+
 // --- Utility helpers --------------------------------------------------------
 
 function toInt(value) {
@@ -15,7 +27,24 @@ function toFloat(value) {
   return Number.isNaN(n) ? 0 : n;
 }
 
-// Aggregate relevant fantasy stats for one team-json payload
+function formatCategoryValue(catKey, rawValue) {
+  if (catKey === "savePct") {
+    return rawValue ? (rawValue * 100).toFixed(1) + "%" : "—";
+  }
+  if (catKey === "gaa") {
+    return rawValue ? rawValue.toFixed(2) : "—";
+  }
+  return rawValue.toString();
+}
+
+function ordinal(n) {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+// --- Aggregate stats for a single team -------------------------------------
+
 function computeTeamSummary(teamJson, overrideLabel) {
   const players = teamJson.players || [];
 
@@ -63,17 +92,6 @@ function computeTeamSummary(teamJson, overrideLabel) {
 
   const powerPlayPoints = powerPlayGoals + powerPlayAssists;
 
-  // Placeholder team score – tune to match your league rules later
-  const fantasyScore =
-    goals +
-    assists +
-    powerPlayPoints +
-    hits +
-    shots +
-    penaltyMinutes +
-    avgSavePct * 10 -
-    avgGaa * 5;
-
   return {
     teamName: overrideLabel || teamJson.team_name || "Unnamed Team",
     seasonId: teamJson.season_id,
@@ -84,25 +102,89 @@ function computeTeamSummary(teamJson, overrideLabel) {
       goals,
       assists,
       powerPlayPoints,
-      powerPlayGoals,
-      powerPlayAssists,
       hits,
       shots,
       penaltyMinutes,
       avgSavePct,
       avgGaa,
-      fantasyScore,
+      fantasyScore: 0 // will be filled in after ranking
     },
+    categoryPoints: {}, // e.g. { goals: 8, assists: 6, ... }
+    categoryRanks: {}   // e.g. { goals: 2, assists: 4, ... }
   };
+}
+
+// --- Category-rank scoring --------------------------------------------------
+
+function applyCategoryRankScoring(summaries) {
+  const nTeams = summaries.length;
+
+  // Reset scores
+  summaries.forEach((team) => {
+    team.categoryPoints = {};
+    team.categoryRanks = {};
+    team.totals.fantasyScore = 0;
+  });
+
+  CATEGORIES.forEach((cat) => {
+    const field = cat.field;
+
+    // Sort copy by raw value for this category
+    const sorted = [...summaries].sort((a, b) => {
+      const av = a.totals[field] ?? 0;
+      const bv = b.totals[field] ?? 0;
+
+      if (cat.higherIsBetter) {
+        return bv - av; // high → low
+      } else {
+        return av - bv; // low → high (e.g. GAA)
+      }
+    });
+
+    // Assign X, X-1, ..., 1 and store rank
+    sorted.forEach((team, idx) => {
+      const rank = idx + 1;        // 1-based rank
+      const points = nTeams - idx; // 1st = X, last = 1
+
+      team.categoryRanks[cat.key] = rank;
+      team.categoryPoints[cat.key] = points;
+      team.totals.fantasyScore += points;
+    });
+  });
 }
 
 // --- Rendering --------------------------------------------------------------
 
-function renderTeamCard(summary, rank) {
+function renderTeamCard(summary, overallRank, nTeams) {
   const container = document.getElementById("team-cards");
   if (!container) return;
 
   const t = summary.totals;
+
+  const statChipsHtml = CATEGORIES.map((cat) => {
+    const rawValue = t[cat.field] ?? 0;
+    const displayValue = formatCategoryValue(cat.key, rawValue);
+    const rank = summary.categoryRanks[cat.key];
+    const rankText = rank
+      ? `${ordinal(rank)} of ${nTeams}`
+      : "Unranked";
+
+    // special classes for save% / GAA, otherwise default
+    let valueClass = "stat-value";
+    if (cat.key === "savePct") {
+      valueClass += " stat-value--good";
+    } else if (cat.key === "gaa") {
+      valueClass += " stat-value--bad";
+    }
+
+    return `
+      <div class="stat-chip">
+        <div class="stat-label">${cat.label}</div>
+        <div class="${valueClass}">${displayValue}</div>
+        <div class="stat-rank">${rankText}</div>
+      </div>
+    `;
+  }).join("");
 
   const card = document.createElement("article");
   card.className = "team-card";
@@ -112,7 +194,7 @@ function renderTeamCard(summary, rank) {
       <div>
         <div class="team-name">${summary.teamName}</div>
         <div class="team-meta">
-          <span class="meta-chip meta-chip--accent">Rank #${rank}</span>
+          <span class="meta-chip meta-chip--accent">Rank #${overallRank}</span>
           <span class="meta-chip">Season ${summary.seasonId}</span>
           <span class="meta-chip">${summary.skaters.length} skaters</span>
           <span class="meta-chip">${summary.goalies.length} goalies</span>
@@ -124,49 +206,16 @@ function renderTeamCard(summary, rank) {
     </header>
 
     <section class="team-card-body">
-      <div class="stat-chip">
-        <div class="stat-label">Goals</div>
-        <div class="stat-value">${t.goals}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">Assists</div>
-        <div class="stat-value">${t.assists}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">PP Points</div>
-        <div class="stat-value">${t.powerPlayPoints}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">Hits</div>
-        <div class="stat-value">${t.hits}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">Shots on Goal</div>
-        <div class="stat-value">${t.shots}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">PIM</div>
-        <div class="stat-value">${t.penaltyMinutes}</div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">Save % (avg)</div>
-        <div class="stat-value stat-value--good">
-          ${t.avgSavePct ? (t.avgSavePct * 100).toFixed(1) + "%" : "—"}
-        </div>
-      </div>
-      <div class="stat-chip">
-        <div class="stat-label">GAA (avg)</div>
-        <div class="stat-value stat-value--bad">
-          ${t.avgGaa ? t.avgGaa.toFixed(2) : "—"}
-        </div>
-      </div>
+      ${statChipsHtml}
     </section>
 
     <footer class="team-card-footer">
       <p class="footer-note">
-        Stats pulled from PWHL API; fantasy scoring applied client-side.
+        Stats pulled from PWHL API; fantasy scoring uses category ranks.
       </p>
-      <span class="footer-tag">Goals · Assists · PP · Hits · SOG · PIM · SV% · GAA</span>
+      <span class="footer-tag">
+        Goals · Assists · PP · Hits · SOG · PIM · SV% · GAA
+      </span>
     </footer>
   `;
 
@@ -280,9 +329,9 @@ async function init() {
     const manifest = await manifestRes.json();
     const teamEntries = manifest.teams || [];
 
-    // 2. Load each team JSON
     const summaries = [];
 
+    // 2. Load each team JSON
     for (const entry of teamEntries) {
       const filePath = entry.url || `data/${entry.file}`;
       try {
@@ -303,17 +352,22 @@ async function init() {
       throw new Error("No team summaries could be loaded.");
     }
 
-    // 3. Sort by fantasy score (descending)
+    // 3. Apply category-based scoring
+    applyCategoryRankScoring(summaries);
+
+    // 4. Sort teams by total fantasy score (descending)
     summaries.sort(
       (a, b) => b.totals.fantasyScore - a.totals.fantasyScore
     );
 
-    // 4. Render cards in rank order
+    const nTeams = summaries.length;
+
+    // 5. Render cards in rank order
     summaries.forEach((summary, index) => {
-      renderTeamCard(summary, index + 1);
+      renderTeamCard(summary, index + 1, nTeams);
     });
 
-    // 5. Show roster for top-ranked team (you can change this behaviour later)
+    // 6. Show roster for top-ranked team by default
     renderRosterTable(summaries[0]);
   } catch (err) {
     console.error("Failed to initialize app:", err);
@@ -326,4 +380,3 @@ async function init() {
 }
 
 init();
-
