@@ -394,8 +394,8 @@ def process_team_file(
 # ---------------------------------------------------------------------------
 
 def main():
-    TEAMS_DIR.mkdir(exist_ok=True)
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    TEAMS_DIR.mkdir(exist_ok=True, parents=True)
+    OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 
     season_id = DEFAULT_SEASON_ID
     print(f"Fetching skater stats for season {season_id}...")
