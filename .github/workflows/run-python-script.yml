@@ -1,11 +1,9 @@
-name: Run Python script
+name: Run PWHL fantasy stats script
 
 on:
-  # Run when you push to main (change branch name if needed)
   push:
-    branches: [ main ]
-  # And allow manual runs from the Actions tab
-  workflow_dispatch:
+    branches: [ main ]     # change if your default branch is different
+  workflow_dispatch:        # allow manual runs from the Actions tab
 
 jobs:
   run-script:
@@ -18,14 +16,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'   # or 3.12/3.10 as you prefer
+          python-version: '3.11'   # or the version you use locally
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run script
-        # Add env: here if you need secrets (see below)
+      - name: Run stats script
         run: |
-          python path/to/your_script.py
+          python main.py
+
+      # Optional: upload the data/ outputs as an artifact you can download
+      - name: Upload stats JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: fantasy-stats-json
+          path: data/*.json
