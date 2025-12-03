@@ -16,7 +16,7 @@ CLIENT_CODE = "pwhl"
 # Default season if not specified in team JSON
 DEFAULT_SEASON_ID = 8
 
-TEAMS_DIR = Path("teams")
+TEAMS_DIR = Path("team_config") 
 OUTPUT_DIR = Path("output")
 
 # Optional: name aliases if your fantasy name doesn't match API name exactly
